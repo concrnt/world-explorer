@@ -10,11 +10,14 @@ console.log("CACHE_INTERVAL_MILLISECONDS", process.env.CACHE_INTERVAL_MILLISECON
 
 
 import express from 'express';
-import {gather} from "./gather";
-import {DomainCache} from "./type";
+import cors from 'cors';
 import MiniSearch from 'minisearch'
 
+import {gather} from "./gather";
+import {DomainCache} from "./type";
+
 const app = express();
+app.use(cors());
 
 let cache: DomainCache[] = []
 let aliveCache: DomainCache[] = []
