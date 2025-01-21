@@ -6,6 +6,7 @@ dotenv.config();
 console.log("--- ENV ---")
 console.log("CONCRNT_API_HOST", process.env.CONCRNT_API_HOST);
 console.log("SERVER_PORT", process.env.SERVER_PORT);
+console.log("CACHE_INTERVAL_MILLISECONDS", process.env.CACHE_INTERVAL_MILLISECONDS);
 
 
 import express from 'express';
@@ -98,4 +99,4 @@ setInterval(async () => {
     await task()
     lock = false
     console.log("update task finished.")
-}, 5 * 60 * 1000)
+}, Number(process.env.CACHE_INTERVAL_MILLISECONDS))
