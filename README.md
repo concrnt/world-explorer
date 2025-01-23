@@ -1,4 +1,4 @@
-# concurrent-community-cache
+# world-explorer
 
 このリポジトリでは、Concurrent 向けのコミュニティキャッシュを提供する簡易的な API を実装しています。  
 API では、キャッシュデータの取得や検索が可能です。
