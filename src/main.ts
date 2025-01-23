@@ -89,6 +89,13 @@ app.get("/timeline", (req, res) => {
     res.json(_result)
 })
 
+app.get("/stat", (req, res) => {
+    res.json({
+        domains: aliveCache.length,
+        timelines: timelineCache.length
+    })
+})
+
 app.listen(process.env.SERVER_PORT, () => {
     console.log('server started on PORT ', process.env.SERVER_PORT)
 });

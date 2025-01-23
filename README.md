@@ -63,11 +63,12 @@ npm run start
        ```
         - この場合、検索キーワードにマッチしたタイムラインのみ返却します。（オンラインのみ）
 
-### GET "/timeline"
+### GET `/timeline`
 qで検索できる
 
-### GET "/domain"
+### GET `/domain`
 
+### GET `/stat`
 
 - **レスポンス例 (JSON)**
 
