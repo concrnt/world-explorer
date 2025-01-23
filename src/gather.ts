@@ -1,9 +1,16 @@
-import dotenv from "dotenv";
+import { CONCRNT_API_HOST } from "./main"
 import {Domain, DomainCache, Timeline} from "./type";
 
-dotenv.config();
 
 export const gather = async (): Promise<DomainCache[]> => {
+    const hostDomain = await getConcrntDomain(CONCRNT_API_HOST)
+    const hostTimelines = await getTimelines(CONCRNT_API_HOST)
+
+    const host: DomainCache = {
+        domain: hostDomain,
+        timelines: hostTimelines
+    }
+
     const domains = await getConcrntDomains()
     const data = domains.map(async (domain: Domain) => {
         const domainWithMeta = await getConcrntDomain(domain.fqdn)
@@ -15,7 +22,11 @@ export const gather = async (): Promise<DomainCache[]> => {
         return {domain: domainWithMeta, timelines}
     })
 
-    return Promise.all(data)
+    const d = await Promise.all(data)
+    if(d.filter((d) => d.domain.fqdn === CONCRNT_API_HOST).length === 0) {
+        d.push(host)
+    }
+    return d
 }
 
 
@@ -26,7 +37,7 @@ export const getTimelines = async (fqdn: string): Promise<Timeline[]> => {
     return timelines.map((timeline: Timeline) => {
         return {
             ...timeline,
-            _parsedDocument: JSON.parse(timeline.document)
+            _parsedDocument: JSON.parse(<string>timeline.document)
         }
     })
 }

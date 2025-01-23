@@ -8,19 +8,39 @@ console.log("CONCRNT_API_HOST", process.env.CONCRNT_API_HOST);
 console.log("SERVER_PORT", process.env.SERVER_PORT);
 console.log("CACHE_INTERVAL_MILLISECONDS", process.env.CACHE_INTERVAL_MILLISECONDS);
 
+if (!process.env.CONCRNT_API_HOST) {
+    console.error("CONCRNT_API_HOST is not defined.")
+    process.exit(1)
+}
+export const CONCRNT_API_HOST = process.env.CONCRNT_API_HOST
+
+if (!process.env.SERVER_PORT) {
+    console.error("SERVER_PORT is not defined. using default port 3000.")
+    process.env.SERVER_PORT = "3000"
+}
+
+export const SERVER_PORT = process.env.SERVER_PORT
+
+if (!process.env.CACHE_INTERVAL_MILLISECONDS) {
+    console.error("CACHE_INTERVAL_MILLISECONDS is not defined. using default interval 300000.")
+    process.env.CACHE_INTERVAL_MILLISECONDS = "300000"
+}
+
+export const CACHE_INTERVAL_MILLISECONDS = process.env.CACHE_INTERVAL_MILLISECONDS
 
 import express from 'express';
 import cors from 'cors';
 import MiniSearch from 'minisearch'
 
 import {gather} from "./gather";
-import {DomainCache} from "./type";
+import {DomainCache, Timeline} from "./type";
 
 const app = express();
 app.use(cors());
 
 let cache: DomainCache[] = []
 let aliveCache: DomainCache[] = []
+let timelineCache: Timeline[] = []
 
 let miniSearch = new MiniSearch({
     fields: ["name", "shortname", "description"],
@@ -45,8 +65,21 @@ app.get('/cache', (req, res) => {
         }
         res.json(aliveCache)
     }
-
 });
+
+app.get("/domain", (req, res) => {
+    res.json(aliveCache.map((d) => d.domain))
+})
+
+app.get("/timeline", (req, res) => {
+    const {q} = req.query
+
+    if (q) {
+        res.json(fuzzySearchTimeline(`${q}`))
+        return
+    }
+    res.json(timelineCache)
+})
 
 app.listen(process.env.SERVER_PORT, () => {
     console.log('server started on PORT ', process.env.SERVER_PORT)
@@ -66,10 +99,19 @@ export const fuzzySearch = (q: string) => {
     }).filter((domain) => domain.timelines.length > 0)
 }
 
+export const fuzzySearchTimeline = (q: string) => {
+    const result = miniSearch.search(`${q}`, {prefix: true})
+    return timelineCache.filter((timeline) => {
+        return result.some((r) => r.id === timeline.id)
+    })
+}
+
 export const task = async () => {
     cache = await gather()
     // どうにかする必要があるかもしれない
     aliveCache = cache.filter((domain) => domain.domain.ccid !== "")
+    timelineCache = aliveCache.map(d => d.timelines.map((t) => { t.domainFQDN = d.domain.fqdn; delete t.document; return t })).flat()
+
     miniSearch.removeAll()
 
     const flatCache = aliveCache.map((domain) => {

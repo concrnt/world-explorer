@@ -63,6 +63,12 @@ npm run start
        ```
         - この場合、検索キーワードにマッチしたタイムラインのみ返却します。（オンラインのみ）
 
+### GET "/timeline"
+qで検索できる
+
+### GET "/domain"
+
+
 - **レスポンス例 (JSON)**
 
 レスポンス例は [src/type.ts](src/type.ts) のDomainCache[]を参照してください。

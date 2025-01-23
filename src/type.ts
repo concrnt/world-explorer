@@ -42,7 +42,7 @@ export type Timeline = {
     schema: string;
     policy: string;
     policyParams: string;
-    document: string;
+    document?: string;
     _parsedDocument: {
         id: string;
         owner: string;
@@ -65,6 +65,7 @@ export type Timeline = {
     signature: string;
     cdate: string;
     mdate: string;
+    domainFQDN?: string
 }
 
 
