@@ -72,13 +72,21 @@ app.get("/domain", (req, res) => {
 })
 
 app.get("/timeline", (req, res) => {
-    const {q} = req.query
-
+    const {q, random, limit} = req.query
+    let _result = timelineCache
     if (q) {
-        res.json(fuzzySearchTimeline(`${q}`))
-        return
+        _result = fuzzySearchTimeline(`${q}`)
     }
-    res.json(timelineCache)
+
+    if (random) {
+        _result = _result.sort(() => Math.random() - 0.5)
+    }
+
+    if (limit) {
+        _result = _result.slice(0, Number(limit))
+    }
+
+    res.json(_result)
 })
 
 app.listen(process.env.SERVER_PORT, () => {
