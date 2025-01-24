@@ -33,7 +33,7 @@ import cors from 'cors';
 import MiniSearch from 'minisearch'
 
 import {gather} from "./gather";
-import {DomainCache, Timeline} from "./type";
+import {DomainCache, Timeline, User} from "./type";
 
 const app = express();
 app.use(cors());
@@ -41,10 +41,19 @@ app.use(cors());
 let cache: DomainCache[] = []
 let aliveCache: DomainCache[] = []
 let timelineCache: Timeline[] = []
+let userCache: User[] = []
 
-let miniSearch = new MiniSearch({
+let timelineSearch = new MiniSearch({
     fields: ["name", "shortname", "description"],
     storeFields: ["name", "shortname", "description", "domain", "id"],
+    processTerm: (term, _fieldName) => {
+        return term.toLowerCase()
+    }
+})
+
+let userSearch = new MiniSearch({
+    fields: ["username", "description"],
+    storeFields: ["username", "description", "avatar", "banner", "badges", "id"],
     processTerm: (term, _fieldName) => {
         return term.toLowerCase()
     }
@@ -89,6 +98,10 @@ app.get("/timeline", (req, res) => {
     res.json(_result)
 })
 
+app.get("/user", (req, res) => {
+    res.json(userCache)
+})
+
 app.get("/stat", (req, res) => {
     res.json({
         domains: aliveCache.length,
@@ -101,7 +114,7 @@ app.listen(process.env.SERVER_PORT, () => {
 });
 
 export const fuzzySearch = (q: string) => {
-    const result = miniSearch.search(`${q}`, {prefix: true})
+    const result = timelineSearch.search(`${q}`, {prefix: true})
     // DomainCache[] に変換
     return aliveCache.map((domain) => {
         const _tls = domain.timelines.filter((timeline) => {
@@ -115,7 +128,7 @@ export const fuzzySearch = (q: string) => {
 }
 
 export const fuzzySearchTimeline = (q: string) => {
-    const result = miniSearch.search(`${q}`, {prefix: true})
+    const result = timelineSearch.search(`${q}`, {prefix: true})
     return timelineCache.filter((timeline) => {
         return result.some((r) => r.id === timeline.id)
     })
@@ -126,9 +139,9 @@ export const task = async () => {
     // どうにかする必要があるかもしれない
     aliveCache = cache.filter((domain) => domain.domain.ccid !== "")
     timelineCache = aliveCache.map(d => d.timelines.map((t) => { t.domainFQDN = d.domain.fqdn; delete t.document; return t })).flat()
+    userCache = aliveCache.map(d => d.users).flat()
 
-    miniSearch.removeAll()
-
+    timelineSearch.removeAll()
     const flatCache = aliveCache.map((domain) => {
         return domain.timelines.map((timeline) => {
             return {
@@ -140,7 +153,7 @@ export const task = async () => {
             }
         })
     }).flat()
-    miniSearch.addAll(flatCache)
+    timelineSearch.addAll(flatCache)
     console.log("cache updated.")
 }
 

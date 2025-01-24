@@ -68,8 +68,41 @@ export type Timeline = {
     domainFQDN?: string
 }
 
+export type User = {
+    id: string;
+    author: string;
+    schema: string;
+    document: string,
+    _parsedDocument: {
+        semanticID: string;
+        signer: string;
+        type: string;
+        schema: string;
+        body: {
+            username: string;
+            description: string;
+            avatar: string;
+            banner: string;
+            badges: {
+                badgeId: string;
+                seriesId: string;
+            }[]
+        },
+        meta: {
+            client: string;
+        },
+        signedAt: string;
+        KeyID: string;
+    }
+    signature: string;
+    cdate: string;
+    mdate: string;
+}
+
+
 
 export type DomainCache = {
     domain: Domain;
     timelines: Timeline[];
+    users: User[];
 }
