@@ -51,13 +51,20 @@ export const getUsers = async (fqdn: string): Promise<User[]> => {
     // untilは取得した最初のユーザーのcdateを使う
     let until: number | undefined = undefined
     while (true) {
-        const _users = await _getUsers(fqdn, until)
-        until = Math.ceil(new Date(_users[_users.length - 1].cdate).getTime() / 1000)
-        users = users.concat(_users)
-        console.log("users", users.length)
-        if (_users.length !== 100) {
-            // 100件未満なので終了
-            break
+        try {
+            const _users = await _getUsers(fqdn, until)
+            if(_users.length === 0) {
+                break
+            }
+            until = Math.ceil(new Date(_users[_users.length - 1].cdate).getTime() / 1000)
+            users = users.concat(_users)
+            console.log("users", users.length)
+            if (_users.length !== 100) {
+                // 100件未満なので終了
+                break
+            }
+        } catch(e) {
+            console.log("error", fqdn)
         }
     }
 
