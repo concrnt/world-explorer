@@ -74,9 +74,10 @@ const _getUsers = async (fqdn: string, until?: number): Promise<User[]> => {
     return users.map((user: User) => {
         return {
             ...user,
-            _parsedDocument: JSON.parse(user.document)
+            _parsedDocument: JSON.parse(user.document ?? ""),
+            fqdn
         }
-    })
+    }).map((user: User) => delete user.document && user)
 }
 
 export const getConcrntDomains = async (): Promise<Domain[]> => {

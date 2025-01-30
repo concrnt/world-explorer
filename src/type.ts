@@ -72,7 +72,7 @@ export type User = {
     id: string;
     author: string;
     schema: string;
-    document: string,
+    document?: string,
     _parsedDocument: {
         semanticID: string;
         signer: string;
@@ -97,6 +97,7 @@ export type User = {
     signature: string;
     cdate: string;
     mdate: string;
+    fqdn?: string
 }
 
 

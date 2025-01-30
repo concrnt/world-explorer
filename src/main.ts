@@ -99,7 +99,24 @@ app.get("/timeline", (req, res) => {
 })
 
 app.get("/user", (req, res) => {
-    res.json(userCache)
+    const {q, random, limit} = req.query
+    let _result = userCache
+    if (q) {
+        const __result = userSearch.search(`${q}`, {prefix: true})
+        _result = _result.filter((user) => {
+            return __result.some((r) => r.id === user.id)
+        })
+    }
+
+    if (random) {
+        _result = _result.sort(() => Math.random() - 0.5)
+    }
+
+    if (limit) {
+        _result = _result.slice(0, Number(limit))
+    }
+
+    res.json(_result)
 })
 
 app.get("/stat", (req, res) => {
@@ -140,9 +157,22 @@ export const task = async () => {
     aliveCache = cache.filter((domain) => domain.domain.ccid !== "")
     timelineCache = aliveCache.map(d => d.timelines.map((t) => { t.domainFQDN = d.domain.fqdn; delete t.document; return t })).flat()
     userCache = aliveCache.map(d => d.users).flat()
+    // idかぶりを消す
+    userCache = userCache.filter((user, index, self) => self.findIndex((u) => u.id === user.id) === index)
+    userSearch.removeAll()
+    const userSearchCache = userCache.map((user) => {
+        return {
+            id: user.id,
+            username: user._parsedDocument.body.username,
+            description: user._parsedDocument.body.description,
+        }
+    })
+
+    userSearch.addAll(userSearchCache)
+
 
     timelineSearch.removeAll()
-    const flatCache = aliveCache.map((domain) => {
+    const timelineSearchCache = aliveCache.map((domain) => {
         return domain.timelines.map((timeline) => {
             return {
                 id: timeline.id,
@@ -153,7 +183,7 @@ export const task = async () => {
             }
         })
     }).flat()
-    timelineSearch.addAll(flatCache)
+    timelineSearch.addAll(timelineSearchCache)
     console.log("cache updated.")
 }
 
