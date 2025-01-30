@@ -122,7 +122,8 @@ app.get("/user", (req, res) => {
 app.get("/stat", (req, res) => {
     res.json({
         domains: aliveCache.length,
-        timelines: timelineCache.length
+        timelines: timelineCache.length,
+        users: userCache.length
     })
 })
 
