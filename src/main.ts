@@ -125,7 +125,7 @@ app.get("/stat", (req, res) => {
         domains: aliveCache.length,
         timelines: timelineCache.length,
         users: userCache.length,
-        lastTaskSuccessDate: lastTaskSuccessDate?.getDate()
+        lastTaskSuccessDate: lastTaskSuccessDate?.getTime()
     })
 })
 
