@@ -42,6 +42,7 @@ let cache: DomainCache[] = []
 let aliveCache: DomainCache[] = []
 let timelineCache: Timeline[] = []
 let userCache: User[] = []
+let lastTaskSuccessDate: Date | null = null
 
 let timelineSearch = new MiniSearch({
     fields: ["name", "shortname", "description"],
@@ -60,7 +61,7 @@ let userSearch = new MiniSearch({
 })
 
 app.get('/', (req, res) => {
-    res.send('concurrent community cache');
+    res.send('world-explorer');
 });
 
 app.get('/cache', (req, res) => {
@@ -123,7 +124,8 @@ app.get("/stat", (req, res) => {
     res.json({
         domains: aliveCache.length,
         timelines: timelineCache.length,
-        users: userCache.length
+        users: userCache.length,
+        lastTaskSuccessDate: lastTaskSuccessDate?.getDate()
     })
 })
 
@@ -153,39 +155,48 @@ export const fuzzySearchTimeline = (q: string) => {
 }
 
 export const task = async () => {
-    cache = await gather()
-    // どうにかする必要があるかもしれない
-    aliveCache = cache.filter((domain) => domain.domain.ccid !== "")
-    timelineCache = aliveCache.map(d => d.timelines.map((t) => { t.domainFQDN = d.domain.fqdn; delete t.document; return t })).flat()
-    userCache = aliveCache.map(d => d.users).flat()
-    // idかぶりを消す
-    userCache = userCache.filter((user, index, self) => self.findIndex((u) => u.id === user.id) === index)
-    userSearch.removeAll()
-    const userSearchCache = userCache.map((user) => {
-        return {
-            id: user.id,
-            username: user._parsedDocument.body.username,
-            description: user._parsedDocument.body.description,
-        }
-    })
-
-    userSearch.addAll(userSearchCache)
-
-
-    timelineSearch.removeAll()
-    const timelineSearchCache = aliveCache.map((domain) => {
-        return domain.timelines.map((timeline) => {
+    try {
+        cache = await gather()
+        // どうにかする必要があるかもしれない
+        aliveCache = cache.filter((domain) => domain.domain.ccid !== "")
+        timelineCache = aliveCache.map(d => d.timelines.map((t) => {
+            t.domainFQDN = d.domain.fqdn;
+            delete t.document;
+            return t
+        })).flat()
+        userCache = aliveCache.map(d => d.users).flat()
+        // idかぶりを消す
+        userCache = userCache.filter((user, index, self) => self.findIndex((u) => u.id === user.id) === index)
+        userSearch.removeAll()
+        const userSearchCache = userCache.map((user) => {
             return {
-                id: timeline.id,
-                name: timeline._parsedDocument.body.name,
-                shortname: timeline._parsedDocument.body.shortname,
-                description: timeline._parsedDocument.body.description,
-                domain: domain.domain.fqdn
+                id: user.id,
+                username: user._parsedDocument.body.username,
+                description: user._parsedDocument.body.description,
             }
         })
-    }).flat()
-    timelineSearch.addAll(timelineSearchCache)
-    console.log("cache updated.")
+
+        userSearch.addAll(userSearchCache)
+
+
+        timelineSearch.removeAll()
+        const timelineSearchCache = aliveCache.map((domain) => {
+            return domain.timelines.map((timeline) => {
+                return {
+                    id: timeline.id,
+                    name: timeline._parsedDocument.body.name,
+                    shortname: timeline._parsedDocument.body.shortname,
+                    description: timeline._parsedDocument.body.description,
+                    domain: domain.domain.fqdn
+                }
+            })
+        }).flat()
+        timelineSearch.addAll(timelineSearchCache)
+        console.log("cache updated.")
+        lastTaskSuccessDate = new Date()
+    } catch (e) {
+        console.error(e)
+    }
 }
 
 // first run
