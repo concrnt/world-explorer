@@ -204,3 +204,8 @@ setInterval(async () => {
     lock = false
     console.log("update task finished.")
 }, Number(process.env.CACHE_INTERVAL_MILLISECONDS))
+
+// unhandledRejection
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('unhandledRejection', reason, promise);
+});
