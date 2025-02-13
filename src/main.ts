@@ -121,6 +121,15 @@ app.get("/user", (req, res) => {
 })
 
 app.get("/stat", (req, res) => {
+    // 1時間以上更新できなかったら、500を返す
+    if (lastTaskSuccessDate && (new Date().getTime() - lastTaskSuccessDate.getTime()) > 3600000) {
+        res.status(500).json({
+            error: "cache is too old."
+        })
+        return
+    }
+
+
     res.json({
         domains: aliveCache.length,
         timelines: timelineCache.length,
